@@ -1,5 +1,7 @@
 # 贡献
 
+> 本项目全程由 **Tencent Hy-4** 与 **ZCode** 开发。
+
 ## 环境
 
 - Windows 10/11 x64

@@ -11,7 +11,7 @@ git clone https://github.com/AnAcretiondisk9986/Cut-Screen4nap.git && cd Cut-Scr
 Windows 电源菜单里没有「只关显示器、系统照常运行」这个动作：睡眠会停掉下载和长任务，锁定到点照样睡，「X 分钟后关闭显示器」又没有按钮可以立即触发。Cut-Screen 把这个被藏起来的动作做成三个可点的档位。
 
 [![Build](https://github.com/AnAcretiondisk9986/Cut-Screen4nap/actions/workflows/ci.yml/badge.svg)](https://github.com/AnAcretiondisk9986/Cut-Screen4nap/actions/workflows/ci.yml)
-[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![License](https://img.shields.io/github/license/AnAcretiondisk9986/Cut-Screen4nap.svg)](LICENSE)
 
 ## 特性
 
@@ -32,6 +32,12 @@ cd Cut-Screen4nap
 dotnet build -c Release
 .\bin\Release\net10.0-windows\CutScreen.exe
 ```
+
+<details>
+<summary>直接下载 V1.0 二进制包（只需 Desktop Runtime）</summary>
+
+从 [Releases](https://github.com/AnAcretiondisk9986/Cut-Screen4nap/releases/tag/V1.0) 下载 `CutScreen-win-x64-V1.0.zip`，解压后双击 `CutScreen.exe`。需先安装 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)。
+</details>
 
 <details>
 <summary>只装运行时、不装 SDK 时的启动方式</summary>
@@ -101,6 +107,7 @@ Cut-Screen 环境自检（不会改变屏幕/电源状态）
 - 完整使用指南与原理：[docs/guide.md](docs/guide.md)
 - 架构与代码结构：[docs/architecture.md](docs/architecture.md)
 - 命令与配置项速查：[docs/configuration.md](docs/configuration.md)
+- V1.0 发行说明：[RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ## 已知边界
 
@@ -108,10 +115,14 @@ Cut-Screen 环境自检（不会改变屏幕/电源状态）
 - 挂机档默认不锁屏，靠「键鼠已放置」的物理隔离兜底；在意室友动鼠标可在设置里开启锁屏。
 - 挂机档的 DDC/CI 默认关闭，`VCP 0xD6` 深睡可能导致背光叫不醒，先跑一次校准再开。
 
+## 开发声明
+
+本项目全程由 **Tencent Hy-4** 与 **ZCode** 开发。
+
 ## 贡献
 
 提交前请阅读 [CONTRIBUTING.md](CONTRIBUTING.md)。最短流程：fork → 分支 → `dotnet build -c Release` → PR。
 
 ## License
 
-[MIT](LICENSE)
+[Apache-2.0](LICENSE)
