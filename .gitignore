@@ -1,0 +1,12 @@
+bin/
+obj/
+*.user
+*.suo
+.vs/
+.vscode/
+.idea/
+selftest.log
+*_preview.png
+settings_preview.png
+uipreview*.png
+*.zip
