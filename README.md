@@ -2,6 +2,10 @@
 
 > Cut-Screen 是一个给宿舍里用笔记本外接多屏的人用的 Windows 托盘工具，用于「灭屏但让电脑继续跑任务」并免掉合盖。
 
+```powershell
+git clone https://github.com/AnAcretiondisk9986/Cut-Screen4nap.git && cd Cut-Screen4nap && dotnet build -c Release
+```
+
 ![主界面：休眠 / 挂机 / 午睡三档卡片](docs/assets/main-window.png)
 
 Windows 电源菜单里没有「只关显示器、系统照常运行」这个动作：睡眠会停掉下载和长任务，锁定到点照样睡，「X 分钟后关闭显示器」又没有按钮可以立即触发。Cut-Screen 把这个被藏起来的动作做成三个可点的档位。
