@@ -1,35 +1,39 @@
-# V1.0
+# V1.1
 
-发布日期：2026-11-06
+发布日期：2026-11-07
 
 ## 概述
 
-Cut-Screen 是一个 Windows 托盘工具。它解决的是：宿舍里笔记本外接多屏、需要临时补觉或夜里跑下载 / 长任务时，Windows 电源菜单没有「只关显示器、系统继续运行」这一项 —— 睡眠会停掉任务，锁定到点照样睡，而「X 分钟后关闭显示器」没有按钮可以立即触发。
-
-本版本提供三个档位，收尾操作完成后选一档、放好键鼠躺下，不用合盖。
+V1.1 在 V1.0 三档灭屏功能之上，新增**开机自启（静默启动）**：登录后 Cut-Screen 只在托盘静默就绪，不弹主窗口、不抢焦点、不弹气泡，需要时右键托盘即用。三档行为与 V1.0 完全一致。
 
 ## 新增
 
-- 三档界面：休眠（无任务）、挂机（有任务）、午睡（临时补觉）
-- 移动鼠标或按任意键即退出，自动还原设置、主窗口自动回来
-- 保活只挂 `PowerRequestSystemRequired`，只保系统不睡，允许屏幕灭
-- 午睡档挂 `PowerRequestDisplayRequired` 阻止系统自己把显示器送进 DPMS 待机，避免退出时外接屏链路重训练造成闪烁 / 断连
-- 两档都不修改电源计划，改由 60 秒重暗定时器与进程级句柄控屏
-- 显示器运行时动态枚举，运行中插拔可补齐 / 移除黑窗口
-- 崩溃快照自恢复，强杀进程后下次启动先还原残留设置
-- 只读环境自检（显示器枚举、电源方案、空闲时钟、DDC/CI 探测、休眠可用性、配置与快照往返）
-- 设置页：进入延时、宽限期、锁屏、DDC/CI、鼠标抖动过滤
-- CI：GitHub Actions 在 `windows-latest` 上跑 restore → build → self-test
+- 设置页新增「开机自启」分区与开关「开机自动启动（静默，不弹主窗口）」
+- 开启后写当前用户 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run` 运行项，值为 `"<exe 路径>" --silent`；**无需管理员、无需计划任务**，取消勾选即移除
+- 新增 `--silent`（兼容 `/silent`）命令行参数：托盘就绪但主窗口不弹出、不抢焦点、不弹崩溃恢复气泡；崩溃恢复 `Snapshot.Recover()` 仍会执行
+- 静默启动遇到已有实例时直接退出、不广播唤醒消息，避免登录后重复把主窗口亮出来；手动双击仍唤醒已有实例
+- 每次启动自动对齐配置与注册表：exe 搬家会更新运行项路径，运行项被手动删除则回写配置为关（以注册表为准）
+- 自检新增第 9 项「开机自启状态读取（只读）」
+- 设置写注册表失败时弹提示，不静默吞掉
+
+## 变更
+
+- 版本号 `1.0.0` → `1.1.0`
+- 文档补充开机自启的用法、原理与架构说明；包内 `README.txt` 标注 V1.1
+- 二进制包改为 `CutScreen-win-x64-V1.1.zip`
+
+三档灭屏、保活、崩溃恢复、DDC/CI、输入检测等行为均不变。
 
 ## 使用前提
 
 - Windows 10/11 x64
 - .NET 10 Desktop Runtime（或 .NET 10 SDK ≥ 10.0.100）
 - 休眠档需要本机启用 hibernate；未启用时程序会提示并尝试 `powercfg /hibernate on`（需管理员，一次即可）
+- 开机自启仅对当前用户生效，不需要管理员权限
 
 ## 安装
 
-下载 `CutScreen-win-x64-V1.0.zip`，解压到任意目录，保持四个产物文件在同一文件夹，双击 `CutScreen.exe`。
+下载 `CutScreen-win-x64-V1.1.zip`，解压到任意目录，保持四个产物文件在同一文件夹，双击 `CutScreen.exe`。
 
 ```text
 CutScreen.exe  CutScreen.dll  CutScreen.runtimeconfig.json  CutScreen.deps.json
@@ -37,11 +41,13 @@ CutScreen.exe  CutScreen.dll  CutScreen.runtimeconfig.json  CutScreen.deps.json
 
 单独复制 `CutScreen.exe` 会报「You must install .NET Desktop Runtime」。
 
+开启自启：**设置 → 开机自启 → 勾选 → 保存并关闭**。也可命令行验证 `CutScreen.exe --silent`。
+
 ## 校验
 
 | 文件 | SHA-256 |
 |---|---|
-| `CutScreen-win-x64-V1.0.zip` | `136256d645155a9c8495bb0cb5071db71d31dc3ce92ad64f1e245292abba5c40` |
+| `CutScreen-win-x64-V1.1.zip` | `17155a89ae7d3bacb587465c757b71adbe629ef98e5c813c82f6a64df8d4fbba` |
 
 ## 已知边界
 
@@ -50,12 +56,14 @@ CutScreen.exe  CutScreen.dll  CutScreen.runtimeconfig.json  CutScreen.deps.json
 - 挂机档 DDC/CI 默认关闭：`VCP 0xD6 = 0x04` 深睡可能导致背光叫不醒，先跑一次「检测外接屏 DDC/CI 校准」再开。
 - 休眠档只能按电源键唤醒，键鼠叫不醒（S4 特性）。
 - 午睡档为纯黑窗口遮光，IPS 内屏会透出深灰；要彻底黑请用挂机档。
+- 开机自启为当前用户级（HKCU Run）：切换 Windows 账户不会跟随；移动 exe 后下次启动会自动修正运行项路径。
 
 ## 文档
 
 - 使用指南：[docs/guide.md](docs/guide.md)
 - 架构说明：[docs/architecture.md](docs/architecture.md)
 - 配置速查：[docs/configuration.md](docs/configuration.md)
+- V1.0 发行说明：[Releases](https://github.com/AnAcretiondisk9986/Cut-Screen4nap/releases/tag/V1.0)
 
 ## 开发声明
 

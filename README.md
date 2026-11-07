@@ -21,6 +21,7 @@ Windows 电源菜单里没有「只关显示器、系统照常运行」这个动
 - 显示器运行时动态枚举，换地点不用改配置
 - 不改电源计划，靠进程级句柄与重暗定时器控屏
 - 崩溃后自恢复，强杀进程也能还原残留设置
+- 开机自启（静默）：登录后只在托盘就绪，不弹主窗口、不抢焦点
 
 ## 安装
 
@@ -36,7 +37,7 @@ dotnet build -c Release
 <details>
 <summary>直接下载 V1.0 二进制包（只需 Desktop Runtime）</summary>
 
-从 [Releases](https://github.com/AnAcretiondisk9986/Cut-Screen4nap/releases/tag/V1.0) 下载 `CutScreen-win-x64-V1.0.zip`，解压后双击 `CutScreen.exe`。需先安装 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)。
+从 [Releases](https://github.com/AnAcretiondisk9986/Cut-Screen4nap/releases/latest) 下载最新 `CutScreen-win-x64-V1.1.zip`，解压后双击 `CutScreen.exe`。需先安装 [.NET 10 Desktop Runtime](https://dotnet.microsoft.com/download/dotnet/10.0)。
 </details>
 
 <details>
@@ -62,6 +63,16 @@ CutScreen.exe  CutScreen.dll  CutScreen.runtimeconfig.json  CutScreen.deps.json
 4. 移动鼠标或按任意键            → 黑窗口撤除，主窗口自动回来
 ```
 
+## 开机自启（静默）
+
+在 **设置 → 开机自启** 勾选「开机自动启动（静默，不弹主窗口）」并保存即可。开启后：
+
+- 写当前用户的 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`，无需管理员、无需计划任务
+- 登录时以 `CutScreen.exe --silent` 启动：托盘图标出现、功能就绪，但主窗口不弹出、不抢焦点、不弹气泡
+- 取消勾选则移除该运行项
+
+命令行也可直接验证静默启动：`CutScreen.exe --silent`。重复运行不会弹出多个实例（沿用单实例互斥体，静默启动遇到已有实例会直接退出，不唤醒窗口）。
+
 自检（只读，不会关屏、锁屏或休眠）：
 
 ```powershell
@@ -81,6 +92,7 @@ Cut-Screen 环境自检（不会改变屏幕/电源状态）
   [OK]   [6] 休眠可用性 → HibernateEnabled=0
   [OK]   [7] Config 往返 → 一致 (37)
   [OK]   [8] Snapshot 落盘→Recover→清空 → Recover=True，残留=无
+  [OK]   [9] 开机自启状态读取(只读) → 当前自启=关闭，exe=...\CutScreen.exe
 
 自检完成：未调用任何会关屏 / 锁屏 / 休眠的 API。
 ```
@@ -107,7 +119,7 @@ Cut-Screen 环境自检（不会改变屏幕/电源状态）
 - 完整使用指南与原理：[docs/guide.md](docs/guide.md)
 - 架构与代码结构：[docs/architecture.md](docs/architecture.md)
 - 命令与配置项速查：[docs/configuration.md](docs/configuration.md)
-- V1.0 发行说明：[RELEASE_NOTES.md](RELEASE_NOTES.md)
+- V1.1 发行说明：[RELEASE_NOTES.md](RELEASE_NOTES.md)
 
 ## 已知边界
 

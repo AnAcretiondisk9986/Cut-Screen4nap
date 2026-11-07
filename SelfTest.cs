@@ -42,6 +42,11 @@ internal static class SelfTest
             bool found = Snapshot.Recover(out _);
             return $"Recover={found}，残留={(Snapshot.Load() is null ? "无" : "有")}";
         });
+        Check("[9] 开机自启状态读取(只读)", () =>
+        {
+            bool on = StartupManager.IsEnabled();
+            return $"当前自启={(on ? "开启" : "关闭")}，exe={StartupManager.ExecutablePath}";
+        });
         Write("\n自检完成：未调用任何会关屏 / 锁屏 / 休眠的 API。");
         try
         {

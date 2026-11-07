@@ -7,11 +7,15 @@ internal sealed class SettingsForm : Form
 {
     private readonly Config _cfg;
     private readonly ModeController _ctl;
+    private bool _startupDesired;
+    private CheckBox? _startupCheck;
 
     public SettingsForm(Config cfg, ModeController ctl)
     {
         _cfg = cfg;
         _ctl = ctl;
+        // 以注册表实际状态为准（Program 启动时已把配置对齐过一次）。
+        _startupDesired = StartupManager.IsEnabled();
         Text = "设置 · Cut-Screen";
         Size = new Size(560, 600);
         MinimumSize = new Size(440, 400);
@@ -49,8 +53,41 @@ internal sealed class SettingsForm : Form
             _cfg.IgnoreMouseJitter, v => { _cfg.IgnoreMouseJitter = v; _ctl.RebuildWatcher(); }));
         root.Controls.Add(Spin("鼠标位移阈值（px）", 1, 50, _cfg.MouseThresholdPx, v => _cfg.MouseThresholdPx = v));
 
+        root.Controls.Add(Section("开机自启"));
+        root.Controls.Add(BuildStartupOption());
+
         root.Controls.Add(BuildButtons());
         Controls.Add(root);
+    }
+
+    private Control BuildStartupOption()
+    {
+        var p = new FlowLayoutPanel
+        {
+            AutoSize = true, AutoSizeMode = AutoSizeMode.GrowAndShrink,
+            FlowDirection = FlowDirection.TopDown, WrapContents = false,
+            Margin = new Padding(0, 4, 0, 4)
+        };
+
+        var c = new CheckBox
+        {
+            Text = "开机自动启动（静默，不弹主窗口）", Checked = _startupDesired,
+            AutoSize = true, Margin = new Padding(0, 4, 0, 2)
+        };
+        c.CheckedChanged += (_, _) => _startupDesired = c.Checked;
+        _startupCheck = c;
+
+        var hint = new Label
+        {
+            Text = "登录后只在托盘静默就绪；写 HKCU 运行项，无需管理员。"
+                 + "\n需修改请点「保存并关闭」后生效。关闭本项会移除自启。",
+            AutoSize = true, ForeColor = Color.FromArgb(150, 155, 168),
+            Margin = new Padding(20, 2, 0, 2)
+        };
+
+        p.Controls.Add(c);
+        p.Controls.Add(hint);
+        return p;
     }
 
     private Control BuildButtons()
@@ -79,7 +116,25 @@ internal sealed class SettingsForm : Form
             Padding = new Padding(10, 0, 10, 0), FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(52, 96, 168), ForeColor = Color.White
         };
-        ok.Click += (_, _) => { _cfg.Save(); Close(); };
+        ok.Click += (_, _) =>
+        {
+            // 自启状态写注册表（HKCU，无需管理员）。失败要让用户知道，别静默吞掉。
+            bool applied = StartupManager.SetEnabled(_startupDesired);
+            if (applied)
+            {
+                _cfg.RunAtStartup = _startupDesired;
+                _cfg.Save();
+                Close();
+            }
+            else
+            {
+                MessageBox.Show(this,
+                    "无法写入开机自启设置（注册表访问被拒绝）。\n"
+                  + "可手动用任务计划程序或以当前用户权限重试。",
+                    "开机自启", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                if (_startupCheck is not null) _startupCheck.Checked = StartupManager.IsEnabled();
+            }
+        };
 
         p.Controls.Add(cal);
         p.Controls.Add(ok);

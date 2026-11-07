@@ -20,6 +20,9 @@ internal sealed class Config
     public bool IgnoreMouseJitter { get; set; } = false;
     public int MouseThresholdPx { get; set; } = 4;
 
+    /// <summary>开机自启（登录后静默启动，不弹主窗口）。默认关。</summary>
+    public bool RunAtStartup { get; set; } = false;
+
     private static string Dir => Path.Combine(
         Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "CutScreen");
 
@@ -44,6 +47,23 @@ internal sealed class Config
             File.WriteAllText(Path_, JsonSerializer.Serialize(this, new JsonSerializerOptions { WriteIndented = true }));
         }
         catch { /* 设置写不进去不该阻挡主功能 */ }
+    }
+
+    /// <summary>
+    /// 只改「自启状态」再落盘：从磁盘重读最新值，避免把其它线程刚改的字段覆盖回旧值。
+    /// 启动时 StartupManager.Sync 用它把配置与注册表对齐。
+    /// </summary>
+    public void SaveState(bool runAtStartup)
+    {
+        try
+        {
+            var disk = Load();
+            if (disk.RunAtStartup == runAtStartup) return;
+            disk.RunAtStartup = runAtStartup;
+            disk.Save();
+            RunAtStartup = runAtStartup;
+        }
+        catch { /* 写不进去不该阻挡主功能 */ }
     }
 }
 

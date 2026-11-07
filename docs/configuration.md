@@ -14,6 +14,7 @@
 | `UseDdcCi` | bool | `false` | 挂机档外接屏是否优先用 DDC/CI 关背光，需先跑校准 |
 | `IgnoreMouseJitter` | bool | `false` | 忽略低于阈值的鼠标微小位移 |
 | `MouseThresholdPx` | int | `4` | 抖动过滤的位移阈值（像素） |
+| `RunAtStartup` | bool | `false` | 开机自启（静默）。以注册表运行项为准，启动时自动对齐 |
 
 示例：
 
@@ -26,7 +27,8 @@
   "StayAwakeLockScreen": false,
   "UseDdcCi": false,
   "IgnoreMouseJitter": false,
-  "MouseThresholdPx": 4
+  "MouseThresholdPx": 4,
+  "RunAtStartup": false
 }
 ```
 
@@ -76,8 +78,19 @@ powercfg /hibernate on
 powercfg /a
 ```
 
-## 开机自启
+## 开机自启（静默）
 
-`Win+R` → 输入 `shell:startup` → 把 `CutScreen.exe` 的快捷方式放进去。
+推荐在 **设置 → 开机自启** 勾选「开机自动启动（静默，不弹主窗口）」并点「保存并关闭」。程序会写当前用户的注册表运行项：
 
-必须保证快捷方式与 `CutScreen.dll`、`CutScreen.runtimeconfig.json`、`CutScreen.deps.json` 在同一目录，或指向构建输出目录里的 exe。
+```text
+HKCU\Software\Microsoft\Windows\CurrentVersion\Run
+  CutScreen = "…\CutScreen.exe" --silent
+```
+
+- 无需管理员、无需计划任务；只影响当前用户。
+- 登录时以 `--silent` 启动：托盘就绪，主窗口不弹出、不抢焦点、不弹气泡。
+- 命令行可单独验证：`CutScreen.exe --silent`（也接受 `/silent`）。
+- 启动时 `StartupManager.Sync` 会把配置 `RunAtStartup` 与注册表对齐：exe 搬家会自动更新命令行路径，运行项被手动删除则回写配置为关。
+- 取消勾选会移除该运行项。
+
+手动方式（不推荐）：`Win+R` → `shell:startup` → 放 `CutScreen.exe` 的快捷方式，并在快捷方式目标后加 `--silent`。必须保证快捷方式指向的 exe 与 `CutScreen.dll`、`CutScreen.runtimeconfig.json`、`CutScreen.deps.json` 在同一目录。

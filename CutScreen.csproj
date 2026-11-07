@@ -9,7 +9,7 @@
     <AssemblyName>CutScreen</AssemblyName>
     <RootNamespace>CutScreen</RootNamespace>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
-    <Version>1.0.0</Version>
+    <Version>1.1.0</Version>
     <Product>Cut-Screen</Product>
     <Description>宿舍夜间模式：休眠 / 挂机 / 午睡三档显示器管理</Description>
   </PropertyGroup>

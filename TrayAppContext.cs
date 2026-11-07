@@ -21,10 +21,13 @@ internal sealed class TrayAppContext : ApplicationContext
     private readonly System.Windows.Forms.Timer _uiTimer;
     private readonly Dictionary<int, Icon> _iconCache = new();
     private Icon? _currentIcon;
+    private readonly bool _startHidden;
 
-    public TrayAppContext(Config cfg)
+    /// <param name="startHidden">开机自启（--silent）时为 true：不弹主窗口、不弹气泡，只在托盘静默就绪。</param>
+    public TrayAppContext(Config cfg, bool startHidden)
     {
         _cfg = cfg;
+        _startHidden = startHidden;
         _main = new MainForm(_cfg);   // 先建窗体（拿到句柄与同步上下文）
         _controller = new ModeController(cfg, RefreshUi, Notify, MarshalToUi);
         _main.AttachController(_controller);
@@ -52,12 +55,13 @@ internal sealed class TrayAppContext : ApplicationContext
         _uiTimer.Tick += (_, _) => RefreshUi();
         _uiTimer.Start();
 
-        // 崩溃自恢复：上次异常退出留下的持久化改动
-        if (Snapshot.Recover(out var report))
+        // 崩溃自恢复：上次异常退出留下的持久化改动，任何启动方式都要还原。
+        // 但静默启动时不弹气泡打扰用户。
+        if (Snapshot.Recover(out var report) && !_startHidden)
             Notify(report);
 
         _controller.RebuildWatcher();
-        ShowMain();
+        if (!_startHidden) ShowMain();
         RefreshUi();
     }
 

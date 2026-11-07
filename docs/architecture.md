@@ -33,8 +33,9 @@
 
 | 文件 | 职责 |
 |---|---|
-| `Program.cs` | 单实例互斥体、`SELFTEST` 编译开关入口 |
-| `TrayAppContext.cs` | `ApplicationContext`、托盘、UI 线程封送器 `MarshalToUi`、图标缓存 |
+| `Program.cs` | 单实例互斥体、`--silent` 静默启动参数、自启状态对齐、`SELFTEST` 编译开关入口 |
+| `StartupManager.cs` | 开机自启：`HKCU\...\Run` 运行项读写与配置同步 |
+| `TrayAppContext.cs` | `ApplicationContext`、托盘、UI 线程封送器 `MarshalToUi`、图标缓存、静默启动时不弹窗/气泡 |
 | `MainForm.cs` | 三档卡片、状态行、可取消倒计时 |
 | `SettingsForm.cs` | 设置页（纯 `AutoSize` 布局） |
 | `ModeController.cs` | 状态机、重暗定时器、快照、崩溃自恢复 |
@@ -85,6 +86,15 @@
 - 进程级资源（`PowerRequest` 句柄、黑窗口、DDC/CI 句柄）由 OS 在进程死亡时自动回收，不进快照
 - 启动时 `Snapshot.Recover()` 先还原残留再正常工作
 - 旧版本残留的 `MonitorTimeoutChanged=true` 快照仍兼容还原
+
+## 开机自启（静默）
+
+设置页的开关经 `StartupManager` 写当前用户 `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`，值为 `"<exe 路径>" --silent`。只影响当前用户，无需管理员或计划任务。
+
+- `Program.Main` 解析 `--silent` / `/silent`，把 `startHidden` 传给 `TrayAppContext`：跳过 `ShowMain()`、不弹崩溃恢复气泡，只在托盘静默就绪。
+- 自启进程遇到已有实例（单实例互斥体）时直接退出、不广播唤醒消息，避免登录后重复把主窗口亮出来；手动双击才唤醒。
+- 每次启动 `StartupManager.Sync(cfg.RunAtStartup)` 会核对注册表：状态一致但 exe 路径变了就更新命令行；运行项被删则把配置回写为关。配置落后时以注册表为准。
+- 崩溃恢复 `Snapshot.Recover()` 任何启动方式都会执行（清理残留状态），仅气泡提示在静默启动时抑制。
 
 ## 持续集成
 
